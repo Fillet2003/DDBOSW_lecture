@@ -469,6 +469,14 @@ class MainScreen(Screen):
         except Exception as e:
             self.show_error_popup("Ошибка", str(e))
 
+    def get_api_url(self):
+        import os
+        if os.path.exists('.env'):
+            with open('.env', 'r', encoding='utf-8') as f:
+                for line in f:
+                    return line
+        return "https://jsonplaceholder.typicode.com/posts"
+
     def sync_to_cloud(self):
         # Синхронизация локальных данных с облачным REST API
         import requests
@@ -480,7 +488,7 @@ class MainScreen(Screen):
             "synced_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
 
-        api_url = "https://testtest.api.test"
+        api_url = self.get_api_url()
 
         try:
             response = requests.post(api_url, json=payload, timeout=5)
@@ -493,11 +501,27 @@ class MainScreen(Screen):
             else:
                 self.show_error_popup("Ошибка сервера", f"Код ответа: {response.status_code}")
         except Exception as e:
-            self.show_error_popup("Ошибка сети", f"Не удалось подключиться к API")
+            self.show_error_popup("Ошибка сети", f"Не удалось подключиться к API:\n{e}")
 
     def show_error_popup(self, title, message):
-        Popup(title=title, content=Label(text=message), size_hint=(0.6, 0.4)).open()
+        # Показ сообщений
+        content = BoxLayout(orientation='vertical', padding=15, spacing=10)
+        
+        lbl = Label(
+            text=message,
+            halign='center',
+            valign='middle',
+            text_size=(self.width, None)
+        )
 
+        content.add_widget(lbl)
+        
+        popup = Popup(
+            title=title,
+            content=content,
+            size_hint=(0.75, 0.45)
+        )
+        popup.open()
 class AddExpensePopup(Popup):
     def __init__(self, main_screen, **kwargs):
         super().__init__(**kwargs)
